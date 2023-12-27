@@ -1,273 +1,140 @@
-import re  # Импорт модуля регулярных выражений (re) для работы с текстовыми паттернами.
-
-class Checkers:
-    def __init__(self):
-        # Инициализация объекта Checkers, представляющего игру в шашки.
-        self.board = [
-            [' ', 'b', ' ', 'b', ' ', 'b', ' ', 'b'],  # Начальное распределение черных шашек.
-            ['b', ' ', 'b', ' ', 'b', ' ', 'b', ' '],
-            [' ', 'b', ' ', 'b', ' ', 'b', ' ', 'b'],
+print("Добро пожаловать в Шашки!")
+board = [
+            [' ', 'w', ' ', 'w', ' ', 'w', ' ', 'w'],  # Начальное распределение черных шашек.
+            ['w', ' ', 'w', ' ', 'w', ' ', 'w', ' '],
+            [' ', 'w', ' ', 'w', ' ', 'w', ' ', 'w'],
             [' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '],  # Пустая строка, разделяющая доску.
             [' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '],
-            ['w', ' ', 'w', ' ', 'w', ' ', 'w', ' '],  # Начальное распределение белых шашек.
-            [' ', 'w', ' ', 'w', ' ', 'w', ' ', 'w'],
-            ['w', ' ', 'w', ' ', 'w', ' ', 'w', ' ']
-        ]
-        self.players = {'w': "Игрок 1", 'b': "Игрок 2"}  # Сопоставление цветов шашек с именами игроков.
-        self.turn = 'w'  # Определение, чей ход (начальный ход за белых).
-        self.queens = {'w': 'W', 'b': 'B'}  # Определение символов для дамок белых и черных шашек.
-        self.account = {'Игрок 1': 0, 'Игрок 2': 0}  # Инициализация счетчика захваченных шашек для каждого игрока.
+            ['b', ' ', 'b', ' ', 'b', ' ', 'b', ' '],  # Начальное распределение белых шашек.
+            [' ', 'b', ' ', 'b', ' ', 'b', ' ', 'b'],
+            ['b', ' ', 'b', ' ', 'b', ' ', 'b', ' ']
+]
+score = "0:0"
+hod = "w"
+def start():
+    print("Инструкция:")
+    print("1. Введите свои ходы в формате 'a5 b4', где 'a5' - начальная позиция, а 'b4' - конечная.")
+    print("2. Игра заканчивается, если один из игроков захватит 12 фигур противника.")
+    print("3. Вы можете ввести 'end' в свой ход, чтобы завершить игру и увидеть итоговый счет.")
+    print("Пусть игра начнется!\n")
+def print_board():
+    """Выводит текущее состояние доски для шашек.
 
-    def print_instruction(self):
-        """Выводит инструкции по игре в шашки.
+        Доска отображается с координатами и расположением фигур.
 
-            Этот метод выводит инструкции по игре в шашки, включая формат совершения ходов
-            и правила завершения игры.
+        :return: None"""
+    print("  A  B  C  D  E  F  G  H")
+    for i in range(8):
+        s = str(i + 1)
+        for k in range(8):
+            s += " " + board[i][k] + "|"
+        print(s)
+def usual_move(x1, y1, x2, y2):
+    """Выполняет стандартный ход на доске для шашек.
 
-            :return: None
-            """
-        # Метод для вывода в консоль инструкций по игре.
-        print("Добро пожаловать в Шашки!")
-        print("Инструкция:")
-        print("1. Введите свои ходы в формате 'a5 b4', где 'a5' - начальная позиция, а 'b4' - конечная.")
-        print("2. Игра заканчивается, если один из игроков захватит 12 фигур противника.")
-        print("3. Вы можете ввести 'end' в свой ход, чтобы завершить игру и увидеть итоговый счет.")
-        print("Пусть игра начнется!\n")
+        Перемещает фигуру с одной позиции на другую без захвата.
 
-    def print_board(self):
-        """Выводит текущее состояние шахматной доски.
+        :param x1: начальный индекс строки
+        :type x1: int
+        :param y1: начальный индекс столбца
+        :type y1: int
+        :param x2: индекс строки назначения
+        :type x2: int
+        :param y2: индекс столбца назначения
+        :type y2: int
+        :return: None"""
+    board[x2][y2] = board[x1][y1]
+    board[x1][y1] = ' '
+def one_kill(x1, y1, x2, y2):
+    """Выполняет захватывающий ход на доске для шашек.
 
-            Этот метод отображает текущее распределение фигур на доске,
-            включая метки для столбцов и номера строк.
+        Перемещает фигуру с одной позиции на другую, захватывая фигуру противника.
 
-            :return: None
-            """
-        # Метод для вывода в консоль текущего состояния игровой доски.
-        print("  A  B  C  D  E  F  G  H")  # Изменить метки столбцов
-        for i, row in enumerate(self.board):
-            print(i + 1, end=' ')
-            for piece in row:
-                print(f'{piece}|', end=' ')
-            print()
-
-    def is_valid_move(self, start_x, start_y, end_x, end_y):
-        """Проверяет, является ли ход допустимым согласно правилам шашек.
-
-            Этот метод проверяет, соответствует ли ход из начальной позиции в конечную
-            правилам шашек, учитывая типы фигур и возможные захваты.
-
-            :param start_x: X-координата начальной позиции.
-            :type start_x: int
-            :param start_y: Y-координата начальной позиции.
-            :type start_y: int
-            :param end_x: X-координата конечной позиции.
-            :type end_x: int
-            :param end_y: Y-координата конечной позиции.
-            :type end_y: int
-            :return: True, если ход допустим, False в противном случае.
-            :rtype: bool
-            """
-        # Метод для проверки валидности хода согласно правилам шашек.
-        # Проверка, что ход находится в пределах доски
-        if 0 <= start_x < 8 and 0 <= start_y < 8 and 0 <= end_x < 8 and 0 <= end_y < 8:
-            # Проверка, что конечная позиция пуста
-            if self.board[end_x][end_y] == ' ':
-                # Проверка, что ход является диагональным для обычных шашек и дамок
-                if abs(start_x - end_x) == abs(start_y - end_y):
-                    # Дамки могут двигаться в любом направлении по диагонали
-                    return True
-                # Проверка, что ход составляет ровно один квадрат по диагонали для обычных шашек
-                elif abs(start_x - end_x) == 1 and abs(start_y - end_y) == 1:
-                    # Убедитесь, что обычные шашки могут двигаться только вперед
-                    if (
-                        (self.turn == 'w' and start_x > end_x) or
-                        (self.turn == 'b' and start_x < end_x)
-                    ):
-                        return True
-                # Проверка, что ход - прыжок через фигуру противника для обычных шашек и дамок
-                elif abs(start_x - end_x) == 2 and abs(start_y - end_y) == 2:
-                    jumped_x = (start_x + end_x) // 2
-                    jumped_y = (start_y + end_y) // 2
-                    if self.board[jumped_x][jumped_y] != ' ' and self.board[jumped_x][jumped_y].lower() != self.turn:
-                        return True
-        return False
-
-    def make_move(self, start_x, start_y, end_x, end_y):
-        def make_move(self, start_x, start_y, end_x, end_y):
-            """Выполняет ход и обновляет состояние шахматной доски.
-
-            Этот метод выполняет ход из начальной позиции в конечную,
-            обновляя состояние шахматной доски. Также обрабатывает захват фигур противника
-            и превращение фигур в дамки, когда это необходимо.
-
-            :param start_x: X-координата начальной позиции.
-            :type start_x: int
-            :param start_y: Y-координата начальной позиции.
-            :type start_y: int
-            :param end_x: X-координата конечной позиции.
-            :type end_x: int
-            :param end_y: Y-координата конечной позиции.
-            :type end_y: int
-            :return: True, если игрок может совершить дополнительные ходы, False в противном случае.
-            :rtype: bool
-            """
-
-        # Метод для выполнения хода и обновления состояния доски.
-        if self.is_valid_move(start_x, start_y, end_x, end_y):
-            self.board[end_x][end_y] = self.board[start_x][start_y]
-            self.board[start_x][start_y] = ' '
-
-            # Удаление убитых фигур
-            if abs(start_x - end_x) == 2:
-                killed_x = (start_x + end_x) // 2
-                killed_y = (start_y + end_y) // 2
-                self.board[killed_x][killed_y] = ' '
-
-                # Увеличение счета для игрока
-                self.account[self.players[self.turn]] += 1
-
-                # Проверка на возможность дополнительных прыжков для одного игрока
-                if self.can_hit_again(end_x, end_y):
-                    return True
-
-            # Проверка, становится ли фигура дамкой
-            if (self.turn == 'w' and end_x == 0) or (self.turn == 'b' and end_x == 7):
-                self.board[end_x][end_y] = self.queens[self.turn]
-
-            return False
+        :param x1: начальный индекс строки
+        :type x1: int
+        :param y1: начальный индекс столбца
+        :type y1: int
+        :param x2: индекс строки назначения
+        :type x2: int
+        :param y2: индекс столбца назначения
+        :type y2: int
+        :return: None"""
+    board[x2][y2] = board[x1][y1]
+    board[x1][y1] = " "
+    board[abs(x1 + x2) // 2][abs(y1 + y2) // 2] = " "
+start()
+print_board()
+while True:
+    print(hod)
+    move = input("Введите ход (например, a5 b4) или введите 'end' для завершения игры: ")
+    move = move.split()
+    if move[0] == "end":
+        pobed = input("Введите номер победившего игрока(1 или 2): ")
+        if pobed == "1":
+            score = str(int(score[0]) + 1) + score[1:]
         else:
-            print("Недопустимый ход. Попробуйте еще раз.")
-            return True
-
-    def can_hit_again(self, x, y):
-        """Проверяет, может ли текущий игрок совершить дополнительные захваты.
-
-            Этот метод определяет, может ли текущий игрок, после совершения захвата,
-            совершить дополнительные последовательные захваты.
-
-            :param x: X-координата текущей позиции.
-            :type x: int
-            :param y: Y-координата текущей позиции.
-            :type y: int
-            :return: True, если возможны дополнительные захваты, False в противном случае.
-            :rtype: bool
-            """
-        # Метод проверяет, может ли текущий игрок сделать дополнительные ходы захвата.
-        directions = [(1, 1), (1, -1), (-1, 1), (-1, -1)]
-        for dx, dy in directions:
-            distance = 1
-            while self.is_valid_move(x, y, x + distance * dx, y + distance * dy):
-                target_x = x + distance * dx
-                target_y = y + distance * dy
-                jumped_x = (x + target_x) // 2
-                jumped_y = (y + target_y) // 2
-                if self.board[target_x][target_y] != ' ' and self.board[jumped_x][jumped_y] != ' ' and self.board[target_x][target_y].lower() != self.turn:
-                    return True
-                distance += 1
-        return False
-
-    def parse_move(self, move):
-        """Анализирует ввод игрока и возвращает координаты хода.
-
-            Этот метод анализирует ввод игрока, который должен быть в формате 'a5 b4',
-            и возвращает координаты начальной и конечной позиций хода.
-
-            :param move: Ввод игрока, представляющий ход.
-            :type move: str
-            :return: Кортеж start_x, start_y, end_x, end_y или None, если ввод недопустим.
-            :rtype: tuple or None
-            """
-        # Метод для парсинга ввода игрока и возврата координат начальной и конечной позиций хода.
-        match = re.match(r'^([a-hA-H][1-8])\s+([a-hA-H][1-8])$', move)
-        if match:
-            start_coord, end_coord = match.groups()
-            start_x, start_y = int(start_coord[1]) - 1, ord(start_coord[0].upper()) - ord('A')
-            end_x, end_y = int(end_coord[1]) - 1, ord(end_coord[0].upper()) - ord('A')
-            return start_x, start_y, end_x, end_y
-        return None
-
-    def print_score(self):
-        """Выводит итоговый счет игры в консоль.
-
-            Этот метод выводит итоговый счет игры в формате "Игрок 1:Игрок 2".
-
-            :return: None
-            """
-        # Выводит итоговый счет игры в консоль.
-        print(f"Итоговый счет: {self.account['Игрок 1']}:{self.account['Игрок 2']}")
-
-    def play(self):
-        """Запускает и управляет игрой в шашки.
-
-            Этот метод инициирует и контролирует игру в шашки, включая вывод инструкций,
-            отображение доски, ввод игрока и определение победителя.
-
-            :return: None
-            """
-        # Основной метод для запуска игры и управления ею.
-        self.print_instruction()
-        while True:
-            self.print_board()
-            player = self.players[self.turn]
-            print(f"Ход {player} ({self.turn})")
-            move = input("Введите ход (например, a5 b4) или введите 'end' для завершения игры: ")
-
-            if move.lower() == 'end':
-                self.print_score()
-                break
-
-            parsed_move = self.parse_move(move)
-
-            if parsed_move:
-                start_x, start_y, end_x, end_y = parsed_move
-
-                # Проверка, что это ход правильного игрока
-                if self.board[start_x][start_y].lower() != self.turn:
-                    print("Недопустимый ход. Не ваш ход.")
-                    continue
-
-                while self.make_move(start_x, start_y, end_x, end_y):
-                    # Запрос на дополнительные ходы, пока игрок может делать последовательные захваты
-                    self.print_board()
-                    print(f"Ход {player} ({self.turn})")
-                    move = input("Введите ход (например, a5 b4) или введите 'end' для завершения игры: ")
-
-                    if move.lower() == 'end':
-                        self.print_score()
-                        return
-
-                    parsed_move = self.parse_move(move)
-
-                    if parsed_move:
-                        start_x, start_y, end_x, end_y = parsed_move
-
-                        # Проверка, что это ход правильного игрока
-                        if self.board[start_x][start_y].lower() != self.turn:
-                            print("Недопустимый ход. Не ваш ход.")
-                            break
-
-                        # Если ход успешен, продолжаем цикл для последовательных захватов
-                        if not self.make_move(start_x, start_y, end_x, end_y):
-                            break
-                    else:
-                        print("Недопустимый ввод. Пожалуйста, введите ход в формате 'a5 b4'.")
-                        break
-
-                # Смена хода, только если нет больше прыжков
-                self.turn = 'w' if self.turn == 'b' else 'b'
-            else:
-                print("Недопустимый ввод. Пожалуйста, введите ход в формате 'a5 b4'.")
-
-            if self.account['Игрок 1'] >= 12:
-                print("Игрок 1 выиграл!")
-                self.print_score()
-                break
-            elif self.account['Игрок 2'] >= 12:
-                print("Игрок 2 выиграл!")
-                self.print_score()
-                break
-
-if __name__ == "__main__":
-    # Создание экземпляра игры и запуск игры.
-    game = Checkers()
-    game.play()
+            score = score[:2] + str(int(score[2]) + 1)
+        print("Счет:", score)
+        board = [
+            [' ', 'w', ' ', 'w', ' ', 'w', ' ', 'w'],  # Начальное распределение черных шашек.
+            ['w', ' ', 'w', ' ', 'w', ' ', 'w', ' '],
+            [' ', 'w', ' ', 'w', ' ', 'w', ' ', 'w'],
+            [' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '],  # Пустая строка, разделяющая доску.
+            [' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '],
+            ['b', ' ', 'b', ' ', 'b', ' ', 'b', ' '],  # Начальное распределение белых шашек.
+            [' ', 'b', ' ', 'b', ' ', 'b', ' ', 'b'],
+            ['b', ' ', 'b', ' ', 'b', ' ', 'b', ' ']
+        ]
+        start()
+        print_board()
+        continue
+    x1 = int(move[0][1]) - 1
+    y1 = int(ord(move[0][0].lower()) - 96) - 1
+    x2 = int(move[1][1]) - 1
+    y2 = int(ord(move[1][0].lower()) - 96) - 1
+    if board[x1][y1].lower() != hod:
+        print("Недопустимый ход. Не ваш ход.")
+        continue
+    if board[x2][y2] != " " or board[x1][y1] == " ":
+        print("Недопустимый ход")
+        continue
+    elif board[x1][y1].isupper():
+        for l in range(len(move) - 1):
+            x1 = int(move[l][1]) - 1
+            y1 = int(ord(move[l][0].lower()) - 96) - 1
+            x2 = int(move[l + 1][1]) - 1
+            y2 = int(ord(move[l + 1][0].lower()) - 96) - 1
+            if abs(x1 - x2) == 2 and abs(y1 - y2) == 2:
+                one_kill(x1, y1, x2, y2)
+            elif abs(x1 - x2) == 1 and abs(y1 - y2) == 1:
+                usual_move(x1, y1, x2, y2)
+        print_board()
+    elif len(move) > 2:
+        for l in range(len(move) - 1):
+            x1 = int(move[l][1]) - 1
+            y1 = int(ord(move[l][0].lower()) - 96) - 1
+            x2 = int(move[l + 1][1]) - 1
+            y2 = int(ord(move[l + 1][0].lower()) - 96) - 1
+            one_kill(x1, y1, x2, y2)
+        print_board()
+    elif hod == "w" and x2 - x1 == 1 and abs(y1 - y2) == 1 or hod == "b" and x1 - x2 == 1 and abs(y1 - y2) == 1:
+        usual_move(x1, y1, x2, y2)
+        print_board()
+    elif abs(x1 - x2) == 2 and abs(y1 - y2) == 2:
+        if hod == "w" and board[abs(x1 + x2) // 2][abs(y1 + y2) // 2] != "b" or hod == "b" and board[abs(x1 + x2) // 2][abs(y1 + y2) // 2] != "w":
+            print("Недопустимый ход")
+            continue
+        one_kill(x1, y1, x2, y2)
+        print_board()
+    else:
+        print("Недопустимый ход.")
+        continue
+    print(move[-1][1])
+    if hod == "w" and move[-1][1] == "8" or hod == "b" and move[-1][1] == "1":
+        board[x2][y2] = "W"
+    elif hod == "b" and move[-1][1] == "1":
+        board[x2][y2] = "B"
+    if hod == "w":
+        hod = "b"
+    else:
+        hod = "w"

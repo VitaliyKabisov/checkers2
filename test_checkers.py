@@ -1,26 +1,55 @@
-import pytest
-from checkers import Checkers
+# test_checkers.py
 
-@pytest.fixture
-def checkers_game():
-    return Checkers()
+from checkers import print_board, usual_move, one_kill
 
-def test_initialization(checkers_game):
-    assert checkers_game.turn == 'w'
-    assert checkers_game.account == {'Игрок 1': 0, 'Игрок 2': 0}
+def test_usual_move():
+    # Тест для функции usual_move
+    board = [
+        [' ', 'w', ' ', 'w', ' ', 'w', ' ', 'w'],
+        ['w', ' ', 'w', ' ', 'w', ' ', 'w', ' '],
+        [' ', 'w', ' ', 'w', ' ', 'w', ' ', 'w'],
+        [' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '],
+        [' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '],
+        ['b', ' ', 'b', ' ', 'b', ' ', 'b', ' '],
+        [' ', 'b', ' ', 'b', ' ', 'b', ' ', 'b'],
+        ['b', ' ', 'b', ' ', 'b', ' ', 'b', ' ']
+    ]
+    x1, y1, x2, y2 = 2, 1, 3, 0  # Пример хода
+    usual_move(x1, y1, x2, y2)
+    expected_board = [
+        [' ', 'w', ' ', 'w', ' ', 'w', ' ', 'w'],
+        [' ', ' ', 'w', ' ', 'w', ' ', 'w', ' '],
+        ['w', 'w', ' ', 'w', ' ', 'w', ' ', 'w'],
+        [' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '],
+        [' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '],
+        ['b', ' ', 'b', ' ', 'b', ' ', 'b', ' '],
+        [' ', 'b', ' ', 'b', ' ', 'b', ' ', 'b'],
+        ['b', ' ', 'b', ' ', 'b', ' ', 'b', ' ']
+    ]
+    assert board == expected_board
 
-def test_valid_move(checkers_game):
-    assert checkers_game.is_valid_move(5, 0, 4, 1)
-
-def test_invalid_move(checkers_game):
-    assert not checkers_game.is_valid_move(5, 0, 4, 2)
-
-def test_make_move(checkers_game):
-    checkers_game.make_move(5, 0, 4, 1)
-    assert checkers_game.board[5][0] == ' '
-    assert checkers_game.board[4][1] == 'w'
-
-def test_parse_move(checkers_game):
-    move = 'a5 b4'
-    parsed_move = checkers_game.parse_move(move)
-    assert parsed_move == (4, 0, 3, 1)
+def test_one_kill():
+    # Тест для функции one_kill
+    board = [
+        [' ', 'w', ' ', 'w', ' ', 'w', ' ', 'w'],
+        ['w', ' ', 'w', ' ', 'w', ' ', 'w', ' '],
+        [' ', 'w', ' ', 'w', ' ', 'w', ' ', 'w'],
+        [' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '],
+        [' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '],
+        ['b', ' ', 'b', ' ', 'b', ' ', 'b', ' '],
+        [' ', 'b', ' ', 'b', ' ', 'b', ' ', 'b'],
+        ['b', ' ', 'b', ' ', 'b', ' ', 'b', ' ']
+    ]
+    x1, y1, x2, y2 = 2, 1, 4, 3  # Пример хода
+    one_kill(x1, y1, x2, y2)
+    expected_board = [
+        [' ', 'w', ' ', 'w', ' ', 'w', ' ', 'w'],
+        ['w', ' ', 'w', ' ', 'w', ' ', 'w', ' '],
+        [' ', 'w', ' ', ' ', ' ', 'w', ' ', 'w'],
+        [' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '],
+        [' ', ' ', ' ', 'b', ' ', ' ', ' ', ' '],
+        ['b', ' ', ' ', ' ', 'b', ' ', 'b', ' '],
+        [' ', 'b', ' ', 'b', ' ', 'b', ' ', 'b'],
+        ['b', ' ', 'b', ' ', 'b', ' ', 'b', ' ']
+    ]
+    assert board == expected_board
